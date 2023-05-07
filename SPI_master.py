@@ -7,7 +7,7 @@ GPIO.setmode(GPIO.BCM) #Definimos el modo para referirnos a los pines de la Rasp
 
 spi = spidev.SpiDev() #Creamos el objeto spi
 spi.open(0,0) #Abrimos el puerto SPI - Módulo 0, Dispositivo 0
-spi.max_speed_hz = 5000 #Establecemos la velocidad máxima -->muy importante<--
+spi.max_speed_hz = 4800 #Establecemos la velocidad máxima -->muy importante<--
 try:
     while True:
         comando = input("Ingresar comando (on/off): ") #Solicitamos ingresar comando

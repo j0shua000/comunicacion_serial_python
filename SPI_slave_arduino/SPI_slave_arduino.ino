@@ -5,11 +5,11 @@ volatile byte pos; //Indice auxiliar para administrar el índice del arreglo "bu
 volatile boolean process_it;  //Bandera auxiliar para saber cuando hemos recibido un comando 
 char on[] = {111,110,10};   //Arreglo de carácteres correspondientes a la cadena "on\n"
 char off[] = {111,102,102,10}; //Arreglo de carácteres correspondientes a la cadena "off\n"
-int pin_led = 14; //Pin al cual se conecto la señal del led
+int pin_led = 4; //Pin al cual se conecto la señal del led
 
 void setup (void)
 {
-  Serial.begin (9600);   
+  Serial.begin (4800);   
   pinMode(pin_led, OUTPUT);
   
   // Configuramos como salida el pin correspondiente a la salida de datos por parte del esclavo
@@ -48,8 +48,8 @@ void loop (void)
 {
   if (process_it)//Si la bandera esta levantada procesamos el comando recibido
     {
-    if(array_cmp(on,buf,3,pos)) digitalWrite(pin_led, HIGH);
-    if(array_cmp(off,buf,4,pos)) digitalWrite(pin_led, LOW);
+    if(array_cmp(on,buf,3,pos)) digitalWrite(pin_led, 1);
+    if(array_cmp(off,buf,4,pos)) digitalWrite(pin_led, 0);
     pos = 0;
     process_it = false;
     }  // fin del procesamiento del comando recibido
