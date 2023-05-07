@@ -1,72 +1,95 @@
 #include <SPI.h>
 
-char buf [100];//Definimos el arreglo de caracteres que será nuestro buffer de recepción 
-volatile byte pos; //Indice auxiliar para administrar el índice del arreglo "buf"
-volatile boolean process_it;  //Bandera auxiliar para saber cuando hemos recibido un comando 
-char on[] = {111,110,10};   //Arreglo de carácteres correspondientes a la cadena "on\n"
-char off[] = {111,102,102,10}; //Arreglo de carácteres correspondientes a la cadena "off\n"
-int pin_led = 4; //Pin al cual se conecto la señal del led
+// track if digital pins are set as input or output (saves reading registers) 
+// Pins 0 to 9 can be used, pin 10 can be used for SS (but can be used if that's not required) 
+bool pin_output[11];
 
-void setup (void)
+void setup() 
 {
-  Serial.begin (4800);   
-  pinMode(pin_led, OUTPUT);
+  // by default all pins are inputs
+  for (int i=0; i<11; i++) 
+  {
+    pin_output[i] = false;  
+  }
   
-  // Configuramos como salida el pin correspondiente a la salida de datos por parte del esclavo
+  // Set the Main in Secondary Out as an output
   pinMode(MISO, OUTPUT);
-  
-  // Establecemos el modo de esclavo
+  // turn on SPI as a secondary
+  // Set appropriate bit in SPI Control Register
   SPCR |= _BV(SPE);
- 
-  pos = 0;             // buffer vacio
-  process_it = false;  //bandera auxiliar para indicar cuando un comando completo se encuentra en buffer
-
-  // Habilitamos interrupciones por SPI
-  SPI.attachInterrupt();
-
-}  // fin de setup
+}
 
 
-// Rutina de interrupción SPI
-ISR (SPI_STC_vect)
+void loop () 
 {
-   byte c = SPDR;  // tomamos el byterecibido que se encuentra en el registro de datos SPI
+  char print_text [50];
+  byte in_byte;
+  // SPIF indicates transmission complete (byte received)
+  if ((SPSR & (1 << SPIF)) != 0)
+  {
+    in_byte = SPDR;
+    // if no action bit sent then return same 
+    if (in_byte & 0x80) SPDR = in_byte;
+    // if write set
+    else if (in_byte & 0x20) 
+    {
+      // set digital pin output - use mask to extract pin and output
+      if (set_digital_pin (in_byte & 0x0F, in_byte & 0x40) != 0xFF) SPDR = in_byte;
+    }    
+    // If value is only pin numbers then digital read
+    else if (in_byte < 0x10) 
+    {
+      byte return_val = read_digital_pin (in_byte);
+      SPDR = return_val;
+    }
+    else if ((in_byte & 0x10) && !(in_byte & 0x20))
+    {
+      byte return_val = read_analog_pin (in_byte & 0x0F);
+      SPDR = return_val;
+    }
+    else // Otherwise an error - return 0xff
+    {
+      SPDR = 0xFF;
+    }
+
+  }
+}
+
+byte set_digital_pin (byte address, bool high_value) 
+{
+  if (address < 0 || address > 10) return 0xFF;
+  // Is it currently set as output - if not then set to output
+  if (!pin_output[address]) 
+  {
+    pinMode(address, OUTPUT);
+    pin_output[address] = true;
+  }
+  // set to low if 0, otherwise 1
+  if (high_value == 0) digitalWrite(address, LOW);
+  else digitalWrite (address, HIGH);
+}
+
+// Returns 1 for high and 0 for low
+// If invalid then returns 0xff
+byte read_digital_pin (byte address)
+{
+  if (address < 0 || address > 10) return 0xFF;
+  // if currently output then change to input
+  if (pin_output[address]) 
+  {
+    pinMode(address, INPUT);
+    pin_output[address] = false;
+  }
   
-  //si contamos con espacio agregamos el byte a la cadena de caracteres
-  if (pos < sizeof buf)
-    {
-    buf [pos++] = c; //Agregamos el caracter recibido 
-    
-    // Si el caracter actual es un salto de línea sabemos que hemos recibido un comando completo 
-    if (c == '\n')
-      process_it = true;//Levantamos la bandera
-      
-    }  
-}  // fin de la rutina de interupción SPI
+  return digitalRead (address);
+}
 
-void loop (void)
+// As full byte is used for value there is no invalid value
+// If invalid then returns 0x00
+byte read_analog_pin (byte address)
 {
-  if (process_it)//Si la bandera esta levantada procesamos el comando recibido
-    {
-    if(array_cmp(on,buf,3,pos)) digitalWrite(pin_led, 1);
-    if(array_cmp(off,buf,4,pos)) digitalWrite(pin_led, 0);
-    pos = 0;
-    process_it = false;
-    }  // fin del procesamiento del comando recibido
-    
-}  // fin del loop
-
-
-boolean array_cmp(char *a, char *b, int len_a, int len_b){
-     int n;
-
-     // Si la longitud es distinta regresa FALSO y terminamos la función
-     if (len_a != len_b) return false;
-
-     // Comparramos pares de bytes formados por los los elementos que tienen el mismo índice en sus respectivos arreglos
-     //Si algún par está formado por bytes distintos, regresa FALSO y termina la función
-     for (n=0;n<len_a;n++) if (a[n]!=b[n]) return false;
-
-     //Si llegamos hast aqui es porque los arreglos son identicos
-     return true;
-}//fin de la función
+  if (address < 0 || address > 5) return 0x00;
+  int analog_val = analogRead (address);
+  // Analog value is between 0 and 1024 - div by 4 for byte
+  return (analog_val / 4);
+}
