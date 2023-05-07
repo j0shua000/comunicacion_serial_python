@@ -48,8 +48,8 @@ void loop (void)
 {
   if (process_it)//Si la bandera esta levantada procesamos el comando recibido
     {
-    if(array_cmp(on,buf,3,pos)) digitalWrite(pin_led, 1);
-    if(array_cmp(off,buf,4,pos)) digitalWrite(pin_led, 0);
+    if(array_cmp(on,buf,3,pos)) digitalWrite(pin_led, HIGH);
+    if(array_cmp(off,buf,4,pos)) digitalWrite(pin_led, LOW);
     pos = 0;
     process_it = false;
     }  // fin del procesamiento del comando recibido
