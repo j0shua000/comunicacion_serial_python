@@ -1,28 +1,18 @@
 #include <SPI.h>
 
-class SpiSlave {
-  public:
-    void begin() {
-      pinMode(SS, INPUT_PULLUP);
-      SPI.begin();
-      SPI.setBitOrder(MSBFIRST);
-      SPI.setDataMode(SPI_MODE0);
-    }
-  
-    void readData(byte* data, int len) {
-      while (digitalRead(SS) == LOW);
-      for (int i = 0; i < len; i++) {
-        data[i] = SPI.transfer(0);
-      }
-    }
-};
-
-SpiSlave spiSlave;
+const byte dataToSend[] = "Hola, desde Arduino!";
+byte dataIndex = 0;
 
 void setup() {
-  spiSlave.begin();
+  pinMode(MISO, OUTPUT);
+  SPCR |= _BV(SPE) | _BV(SPIE);
 }
 
 void loop() {
-  // ...
+  delay(100);
+}
+
+ISR(SPI_STC_vect) {
+  SPDR = dataToSend[dataIndex];
+  dataIndex = (dataIndex + 1) % sizeof(dataToSend);
 }
