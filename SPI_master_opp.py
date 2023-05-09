@@ -1,5 +1,6 @@
 import spidev
 import time
+import serial
 
 class SPICommunication:
     def __init__(self, bus, device, max_speed_hz):
