@@ -1,34 +1,28 @@
 #include <SPI.h>
 
-volatile byte receivedData;
-volatile boolean dataReady;
+class SpiSlave {
+  public:
+    void begin() {
+      pinMode(SS, INPUT_PULLUP);
+      SPI.begin();
+      SPI.setBitOrder(MSBFIRST);
+      SPI.setDataMode(SPI_MODE0);
+    }
+  
+    void readData(byte* data, int len) {
+      while (digitalRead(SS) == LOW);
+      for (int i = 0; i < len; i++) {
+        data[i] = SPI.transfer(0);
+      }
+    }
+};
+
+SpiSlave spiSlave;
 
 void setup() {
-  pinMode(MISO, OUTPUT);
-  SPCR |= _BV(SPE) | _BV(SPIE);
-  receivedData = 0;
-  dataReady = false;
+  spiSlave.begin();
 }
 
 void loop() {
-  if (dataReady) {
-    SPDR = receivedData;
-    dataReady = false;
-  }
-}
-
-ISR(SPI_STC_vect) {
-  byte data = SPDR;
-  if (data == 1) {
-    receivedData = 'H';
-  } else if (data == 2) {
-    receivedData = 'o';
-  } else if (data == 3) {
-    receivedData = 'l';
-  } else if (data == 4) {
-    receivedData = 'a';
-  } else {
-    receivedData = '!';
-  }
-  dataReady = true;
+  // ...
 }
