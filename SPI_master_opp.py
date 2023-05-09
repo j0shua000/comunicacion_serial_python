@@ -2,7 +2,7 @@ import spidev
 import time
 
 class SPICommunication:
-    def _init_(self, bus, device, max_speed_hz):
+    def __init__(self, bus, device, max_speed_hz):
         self.bus = bus
         self.device = device
         self.max_speed_hz = max_speed_hz
@@ -12,21 +12,24 @@ class SPICommunication:
 
     def read_data(self):
         message = ''
-        self.spi.xfer2([0x00])  # Iniciar la transmisión desde el Arduino
-        time.sleep(0.01)
         while True:
             data = self.spi.xfer2([0x00])
             character = chr(data[0])
-            if character == '!':
+            if character == '<':
+                break
+
+        while True:
+            data = self.spi.xfer2([0x00])
+            character = chr(data[0])
+            if character == '>':
                 break
             message += character
-            time.sleep(0.01)
         return message
 
     def close(self):
         self.spi.close()
 
-if _name_ == "_main_":
+def main():
     bus = 0
     device = 0
     max_speed_hz = 500000
@@ -42,3 +45,6 @@ if _name_ == "_main_":
     except KeyboardInterrupt:
         print("Terminando comunicación SPI...")
         spi_communication.close()
+
+if __name__ == "__main__":
+    main()

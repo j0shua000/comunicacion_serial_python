@@ -1,7 +1,7 @@
 #include <SPI.h>
 
-const byte dataToSend[] = "Hola, desde Arduino!";
-byte dataIndex = 0;
+const char dataToSend[] = "<Hola, desde Arduino!>";
+volatile byte dataIndex = 0;
 
 void setup() {
   pinMode(MISO, OUTPUT);
