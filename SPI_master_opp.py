@@ -12,6 +12,8 @@ class SPICommunication:
 
     def read_data(self):
         message = ''
+        self.spi.xfer2([0x00])  # Iniciar la transmisión desde el Arduino
+        time.sleep(0.01)
         while True:
             data = self.spi.xfer2([0x00])
             character = chr(data[0])
