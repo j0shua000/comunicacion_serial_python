@@ -1,0 +1,2 @@
+2023-05-09 22:22:06: Temperatura promedio: 17.920454545454547°C
+2023-05-09 22:27:15: Temperatura promedio: 17.86875°C
