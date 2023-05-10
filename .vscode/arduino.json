@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "SPI_slave_arduino_oop\\SPI_slave_arduino_oop.ino",
+    "sketch": "SPI_slave_arduino\\SPI_slave_arduino.ino",
     "port": "COM5"
 }
